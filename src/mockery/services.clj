@@ -19,7 +19,7 @@
 (defn get-card-number [xml-req]
   (zip-xml/xml1->
    (xml-zipper xml-req)
-   :TransferredValueTxn :TransferredValueTxnReq :Extension :Value
+   :TransferredValueTxn :TransferredValueTxnReq :CardActionInfo :PIN
    zip-xml/text))
 
 (defn get-request-category [xml-req]
@@ -34,26 +34,52 @@
    :TransferredValueTxn :TransferredValueTxnReq :ReqAction
    zip-xml/text))
 
-;; TODO: what happens when the xml is malformed (or is another req?)
-(defn is-redemption? [xml-req]
-  (if (and
-       (= "TransferredUse" (get-request-category xml-req))
-       (= "Redeem" (get-request-action xml-req)))
-    (get-card-number xml-req)
-    nil))
+(defn get-request-body [xml-req]
+  (zip-xml/xml1->
+   (xml-zipper xml-req)
+   :TransferredValueTxn :TransferredValueTxnReq))
+
+(defn get-echo-data [xml-req]
+  (zip-xml/xml1->
+   (xml-zipper xml-req)
+   :TransferredValueTxn :TransferredValueTxnReq :EchoData
+   zip-xml/text))
+
+(defn get-tv-action [xml-req]
+  (if
+   (= "TransferredValue" (get-request-category xml-req))
+   (get-request-action xml-req)))
 
 (defn response-template [params]
   (format "error: %s" (:status-code params)))
 
-(defn dispatch-suffix [card-number]
+(defn dispatch-redemption [card-number]
   (str "hello" card-number))
+
+(defn dispatch-inquiry [card-number]
+  (str "oh" card-number))
 
 (defn bad-request []
   (response-template {:status-code 36}))
 
 (defn redeem [xml-req]
-  (if-let [card-number (is-redemption? xml-req)]
-    (dispatch-suffix card-number)
+  (if-let [card-number (get-card-number xml-req)]
+    (dispatch-redemption card-number)
     (bad-request)))
 
-;; also need to define echo and status inquiry
+(defn status-inq [xml-req]
+  (if-let [card-number (get-card-number xml-req)]
+    (dispatch-inquiry card-number)
+    (bad-request)))
+
+(defn echo [xml-req]
+  (let [body (get-request-body xml-req)
+        echo-data (get-echo-data xml-req)]
+    {:body (data-xml/emit-str (first body)) :echo-data echo-data}))
+
+(defn handle-card-request [xml-req]
+  (cond
+   (= "Redeem" (get-tv-action xml-req)) (redeem xml-req)
+   (= "StatusInq" (get-tv-action xml-req)) (status-inq xml-req)
+   (= "Echo" (get-tv-action xml-req)) (echo xml-req)
+   :else (bad-request)))
