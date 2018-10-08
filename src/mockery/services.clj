@@ -2,7 +2,8 @@
   (:require [clojure.xml :as xml]
             [clojure.data.xml :as data-xml]
             [clojure.zip :as zip]
-            [clojure.data.zip.xml :as zip-xml]))
+            [clojure.data.zip.xml :as zip-xml]
+            [mockery.views :as views]))
 
 ;; Inspired by:
 ;; https://github.com/clojuredocs/guides/blob/master/articles/tutorials/parsing_xml_with_zippers.md
@@ -51,6 +52,16 @@
    "TransferredValueTxn/TransferredValueTxnReq/EchoData"
    xml-req))
 
+(defn get-date [xml-req]
+  (get-text-at-path
+   "TransferredValueTxn/TransferredValueTxnReq/Date"
+   xml-req))
+
+(defn get-time [xml-req]
+  (get-text-at-path
+   "TransferredValueTxn/TransferredValueTxnReq/Time"
+   xml-req))
+
 (defn get-tv-action [xml-req]
   (if
    (= "TransferredValue" (get-request-category xml-req))
@@ -84,8 +95,13 @@
     (bad-request)))
 
 (defn echo [xml-req]
-  (let [echo-data (get-echo-data xml-req)]
-    {:echo-data echo-data}))
+  (let [echo-data (get-echo-data xml-req)
+        client-date (get-date xml-req)
+        client-time (get-time xml-req)]
+    (views/render-card-response "echo"
+                                {:echo-data echo-data
+                                 :given-date client-date
+                                 :given-time client-time})))
 
 (defn handle-card-request [xml-req]
   (cond
