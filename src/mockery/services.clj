@@ -14,36 +14,42 @@
      data-xml/parse-str
      zip/xml-zip))
 
-;; TODO: these three methods probably are in dire need of a macro
 
-(defn get-card-number [xml-req]
-  (zip-xml/xml1->
-   (xml-zipper xml-req)
-   :TransferredValueTxn :TransferredValueTxnReq :CardActionInfo :PIN
-   zip-xml/text))
+;; This convenience macro refactors away a bunch of very similar methods
+;; taken from the xml zippers guide:
+;; for example:
+;; (macroexpand-1 '(get-text-at-path "TransferredValueTxn/TransferredValueTxnReq/EchoData" a))
+;; returns
+;; (clojure.data.zip.xml/xml1-> (mockery.services/xml-zipper a) :TransferredValueTxn :TransferredValueTxnReq :EchoData clojure.data.zip.xml/text)
+;; that is, it takes the given document, turns it into a zipper
+;; and traverses it until it gets the text of the last predicate
+
+(defmacro get-text-at-path [path xml-doc]
+  (let [segments (map keyword (clojure.string/split path #"/"))]
+    `(zip-xml/xml1->
+      (xml-zipper ~xml-doc)
+      ~@segments
+      zip-xml/text)))
 
 (defn get-request-category [xml-req]
-  (zip-xml/xml1->
-   (xml-zipper xml-req)
-   :TransferredValueTxn :TransferredValueTxnReq :ReqCat
-   zip-xml/text))
+  (get-text-at-path
+   "TransferredValueTxn/TransferredValueTxnReq/ReqCat"
+   xml-req))
 
 (defn get-request-action [xml-req]
-  (zip-xml/xml1->
-   (xml-zipper xml-req)
-   :TransferredValueTxn :TransferredValueTxnReq :ReqAction
-   zip-xml/text))
+  (get-text-at-path
+   "TransferredValueTxn/TransferredValueTxnReq/ReqAction"
+   xml-req))
 
-(defn get-request-body [xml-req]
-  (zip-xml/xml1->
-   (xml-zipper xml-req)
-   :TransferredValueTxn :TransferredValueTxnReq))
+(defn get-card-number [xml-req]
+  (get-text-at-path
+   "TransferredValueTxn/TransferredValueTxnReq/CardActionInfo/PIN"
+   xml-req))
 
 (defn get-echo-data [xml-req]
-  (zip-xml/xml1->
-   (xml-zipper xml-req)
-   :TransferredValueTxn :TransferredValueTxnReq :EchoData
-   zip-xml/text))
+  (get-text-at-path
+   "TransferredValueTxn/TransferredValueTxnReq/EchoData"
+   xml-req))
 
 (defn get-tv-action [xml-req]
   (if
@@ -67,19 +73,24 @@
     (dispatch-redemption card-number)
     (bad-request)))
 
+(defn redeem-reversal [xml-req]
+  (if-let [card-number (get-card-number xml-req)]
+    (dispatch-redemption card-number)
+    (bad-request)))
+
 (defn status-inq [xml-req]
   (if-let [card-number (get-card-number xml-req)]
     (dispatch-inquiry card-number)
     (bad-request)))
 
 (defn echo [xml-req]
-  (let [body (get-request-body xml-req)
-        echo-data (get-echo-data xml-req)]
-    {:body (data-xml/emit-str (first body)) :echo-data echo-data}))
+  (let [echo-data (get-echo-data xml-req)]
+    {:echo-data echo-data}))
 
 (defn handle-card-request [xml-req]
   (cond
    (= "Redeem" (get-tv-action xml-req)) (redeem xml-req)
+   (= "RedeemReversal" (get-tv-action xml-req)) (redeem-reversal xml-req)
    (= "StatusInq" (get-tv-action xml-req)) (status-inq xml-req)
    (= "Echo" (get-tv-action xml-req)) (echo xml-req)
    :else (bad-request)))
