@@ -3,11 +3,11 @@
 	<TransferredValueTxnResp>
 		<RespCat>TransferredValue</RespCat>
 		<RespAction>{{action}}</RespAction>
-		<RespCode>{{resp-code}}</RespCode>
+		<RespCode>{{resp-code|name}}</RespCode>
 		<RespMsg>{{resp-msg}}</RespMsg>
 		<RespRefNum>{{ref-num}}</RespRefNum>
-		<Date>{{date}}</Date>
-		<Time>{{time}}</Time>
+		<Date>{% now "yyyyMMdd" %}</Date>
+		<Time>{% now "HHmmss" %}</Time>
 		<ProductResp>
 			<Product>
 				<Denom>USD</Denom>

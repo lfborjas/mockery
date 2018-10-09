@@ -6,8 +6,8 @@
 		<RespCode>0</RespCode>
 		<RespMsg>Echoing</RespMsg>
 		<RespRefNum>{{ref-num}}</RespRefNum>
-		<Date>{{date}}</Date>
-		<Time>{{time}}</Time>
+		<Date>{% now "yyyyMMdd" %}</Date>
+		<Time>{% now "HHmmss" %}</Time>
 		<EchoData>{{echo-data}}</EchoData>
 		<TransferredValueTxnReq>
 			<ReqCat>TransferredValue</ReqCat>
