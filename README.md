@@ -63,6 +63,12 @@ For any action, sending a malformed XML request, specifying an unknown action, o
 
 Due to the semantics of POST, a status of `201 Created` will be returned in all cases when an XML request has been sent and content negotiation doesn't fail. The appropriate HTTP headers will be returned in any other case (e.g. if you send an `Accept` header of `text/html`, you'll receive a `406` response with a blank body).
 
+Here's a poorly screenshot Postman session to illustrate a proper request and its response:
+
+![image](https://user-images.githubusercontent.com/82133/46646039-e20d9600-cb55-11e8-981d-542dbb605f8a.png)
+
+![image](https://user-images.githubusercontent.com/82133/46646049-f05bb200-cb55-11e8-969b-c3a778e7464c.png)
+
 
 
 ## Development
