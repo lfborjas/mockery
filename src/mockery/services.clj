@@ -78,10 +78,6 @@
    (= "TransferredValue" (get-request-category xml-req))
    (get-request-action xml-req)))
 
-(defn bad-request []
-  (response-template {:status-code 36}))
-
-
 ;; takes a clojure symbol and returns a CamelCased string
 ;; e.g. (case->action :status-inq)
 ;; => StatusInq
@@ -110,10 +106,18 @@
              :given-date client-date
              :given-time client-time}))))
 
+(defn bad-request [xml-req]
+  (let [client-date (get-date xml-req)
+        client-time (get-time xml-req)]
+    (views/render-card-response
+     "bad-request"
+     {:given-date client-date
+      :given-time client-time})))
+
 (defn card-action [use-case xml-req]
   (if-let [card-number (get-card-number xml-req)]
     (respond use-case card-number xml-req)
-    (bad-request)))
+    (bad-request xml-req)))
 
 (defn echo [xml-req]
   (let [echo-data (get-echo-data xml-req)
@@ -134,4 +138,4 @@
    (card-action :stat-inq xml-req)
    (= "Echo" (get-tv-action xml-req))
    (echo xml-req)
-   :else (bad-request)))
+   :else (bad-request xml-req)))
