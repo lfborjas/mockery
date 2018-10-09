@@ -1,1 +1,1 @@
-web: java $JVM_OPTS -jar target/mockery.jar
+web: java $JVM_OPTS -jar target/uberjar/mockery.jar
