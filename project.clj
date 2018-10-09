@@ -1,6 +1,6 @@
 (defproject mockery "0.1.0-SNAPSHOT"
   :description "A mock XML service"
-  :url "http://xmlmockery.herokuapp.com"
+  :url "http://xml-mockery.herokuapp.com"
   :plugins [[lein-ring "0.12.4"]]
   :ring {:handler mockery.core/handler}
 

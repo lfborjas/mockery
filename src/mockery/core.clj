@@ -7,7 +7,7 @@
 (defresource home [_]
   :available-media-types ["text/html"]
   :allowed-methods [:get]
-  :handle-ok "<html>Hi there, please check my <a href=\"\">README</html>")
+  :handle-ok "<html>Hi there, please check my <a href=\"https://github.com/lfborjas/mockery/blob/master/README.md\">README</html>")
 
 (defresource card-service [_]
   :available-media-types ["text/xml" "application/xml"]
