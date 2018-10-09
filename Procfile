@@ -1,1 +1,1 @@
-web: java $JVM_OPTS -cp target/mockery.jar clojure.main -m mockery.core
+web: java $JVM_OPTS -jar target/mockery.jar
