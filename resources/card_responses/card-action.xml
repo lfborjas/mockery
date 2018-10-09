@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF‐8"?>
+<TransferredValueTxn>
+	<TransferredValueTxnResp>
+		<RespCat>TransferredValue</RespCat>
+		<RespAction>{{action}}</RespAction>
+		<RespCode>{{resp-code}}</RespCode>
+		<RespMsg>{{resp-msg}}</RespMsg>
+		<RespRefNum>{{ref-num}}</RespRefNum>
+		<Date>{{date}}</Date>
+		<Time>{{time}}</Time>
+		<ProductResp>
+			<Product>
+				<Denom>USD</Denom>
+				<FaceValue>{{product-face-value}}</FaceValue>
+				<UPC>{{product-upc}}</UPC>
+			</Product>
+			<Origin>
+				<MerchantName>MOCKSTORE</MerchantName>
+				<StoreID>0666</StoreID>
+			</Origin>
+		</ProductResp>
+		<TransferredValueTxnReq>
+			<ReqCat>TransferredValue</ReqCat>
+			<ReqAction>{{action}}</ReqAction>
+			<Date>{{given-date}}</Date>
+			<Time>{{given-time}}</Time>
+			<PartnerName>MOCK</PartnerName>
+			<CardActionInfo>
+				<PIN>{{pin}}</PIN>
+				<AcctNum>{{acct-num}}</AcctNum>
+				<SrcRefNum>{{src-ref-num}}</SrcRefNum>
+			</CardActionInfo>
+		</TransferredValueTxnReq>
+		<Extension>
+			<Name>ActivationDateTime</Name>
+			<Value>{{activation-date}}</Value>
+		</Extension>
+		<Extension>
+			<Name>SerialNumber</Name>
+			<Value>{{serial-number}}</Value>
+		</Extension>
+	</TransferredValueTxnResp>
+</TransferredValueTxn>

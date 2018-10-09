@@ -3,10 +3,10 @@
             [clojure.data.xml :as data-xml]
             [clojure.zip :as zip]
             [clojure.data.zip.xml :as zip-xml]
-            [mockery.views :as views]))
+            [mockery.views :as views]
+            [mockery.models :as models]))
 
 ;; Inspired by:
-;; https://github.com/clojuredocs/guides/blob/master/articles/tutorials/parsing_xml_with_zippers.md
 ;; http://blog.korny.info/2014/03/08/xml-for-fun-and-profit.html#parsing-wikipedia
 ;; http://clojure-doc.org/articles/tutorials/parsing_xml_with_zippers.html
 
@@ -18,6 +18,7 @@
 
 ;; This convenience macro refactors away a bunch of very similar methods
 ;; taken from the xml zippers guide:
+;; https://github.com/clojuredocs/guides/blob/master/articles/tutorials/parsing_xml_with_zippers.md
 ;; for example:
 ;; (macroexpand-1 '(get-text-at-path "TransferredValueTxn/TransferredValueTxnReq/EchoData" a))
 ;; returns
@@ -62,36 +63,56 @@
    "TransferredValueTxn/TransferredValueTxnReq/Time"
    xml-req))
 
+(defn get-account [xml-req]
+  (get-text-at-path
+   "TransferredValueTxn/TransferredValueTxnReq/CardActionInfo/AcctNum"
+   xml-req))
+
+(defn get-ref [xml-req]
+  (get-text-at-path
+   "TransferredValueTxn/TransferredValueTxnReq/CardActionInfo/SrcRefNum"
+   xml-req))
+
 (defn get-tv-action [xml-req]
   (if
    (= "TransferredValue" (get-request-category xml-req))
    (get-request-action xml-req)))
 
-(defn response-template [params]
-  (format "error: %s" (:status-code params)))
-
-(defn dispatch-redemption [card-number]
-  (str "hello" card-number))
-
-(defn dispatch-inquiry [card-number]
-  (str "oh" card-number))
-
 (defn bad-request []
   (response-template {:status-code 36}))
 
-(defn redeem [xml-req]
-  (if-let [card-number (get-card-number xml-req)]
-    (dispatch-redemption card-number)
-    (bad-request)))
 
-(defn redeem-reversal [xml-req]
-  (if-let [card-number (get-card-number xml-req)]
-    (dispatch-redemption card-number)
-    (bad-request)))
+;; takes a clojure symbol and returns a CamelCased string
+;; e.g. (case->action :status-inq)
+;; => StatusInq
+(defn camelize [use-case]
+  (-> use-case
+      name
+      (#(clojure.string/split % #"-"))
+      (#(map  clojure.string/capitalize %))
+      (#(clojure.string/join %))))
 
-(defn status-inq [xml-req]
+(defn respond [use-case card-number xml-req]
+  (let [card-data   (models/match-card-number
+                      use-case card-number)
+        client-date (get-date xml-req)
+        client-time (get-time xml-req)
+        account     (get-account xml-req)
+        ref-num     (get-ref xml-req)
+        action-name (camelize use-case)]
+    (views/render-card-response
+     "card-action"
+     (merge card-data
+            {:pin card-number
+             :acct-num account
+             :src-ref-num ref-num
+             :action action-name
+             :given-date client-date
+             :given-time client-time}))))
+
+(defn card-action [use-case xml-req]
   (if-let [card-number (get-card-number xml-req)]
-    (dispatch-inquiry card-number)
+    (respond use-case card-number xml-req)
     (bad-request)))
 
 (defn echo [xml-req]
@@ -105,8 +126,12 @@
 
 (defn handle-card-request [xml-req]
   (cond
-   (= "Redeem" (get-tv-action xml-req)) (redeem xml-req)
-   (= "RedeemReversal" (get-tv-action xml-req)) (redeem-reversal xml-req)
-   (= "StatusInq" (get-tv-action xml-req)) (status-inq xml-req)
-   (= "Echo" (get-tv-action xml-req)) (echo xml-req)
+   (= "Redeem" (get-tv-action xml-req))
+   (card-action :redeem xml-req)
+   (= "RedeemReversal" (get-tv-action xml-req))
+   (card-action :redeem-reversal xml-req)
+   (= "StatInq" (get-tv-action xml-req))
+   (card-action :stat-inq xml-req)
+   (= "Echo" (get-tv-action xml-req))
+   (echo xml-req)
    :else (bad-request)))
