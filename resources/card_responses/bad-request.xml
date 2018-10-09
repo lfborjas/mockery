@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF‐8"?>
+<TransferredValueTxn>
+	<TransferredValueTxnResp>
+		<RespCat>TransferredValue</RespCat>
+		<RespAction>BadRequest</RespAction>
+		<RespCode>32</RespCode>
+		<RespMsg>Invalid Request</RespMsg>
+		<RespRefNum>{{ref-num}}</RespRefNum>
+		<Date>{% now "yyyyMMdd" %}</Date>
+		<Time>{% now "HHmmss" %}</Time>
+		<TransferredValueTxnReq>
+			<ReqCat>TransferredValue</ReqCat>
+			<ReqAction>BadRequest</ReqAction>
+			<Date>{{given-date}}</Date>
+			<Time>{{given-time}}</Time>
+			<PartnerName>MOCK</PartnerName>
+		</TransferredValueTxnReq>
+	</TransferredValueTxnResp>
+</TransferredValueTxn>
